@@ -3,7 +3,7 @@
   "main": "lib.js",
   "scripts": {
     "lint": "eslint .",
-    "mocha": "mocha --exit *.spec.js",
+    "mocha": "npm run lint && mocha --exit *.spec.js",
     "test": "npm run mocha"
   },
   "dependencies": {

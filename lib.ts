@@ -1,7 +1,5 @@
 'use strict';
 
-
-
 type Friends = {
 	name: string,
 	friends: string[],
@@ -10,33 +8,52 @@ type Friends = {
 }
 type Filter = {
 	gender: 'male'|'female'
-} 
+}
 
-let sorted = [];
+type SortedLevel = string[]
+type Sorted = SortedLevel[];
+
+
+type Constructor = {
+	counter: number,
+	level: number,
+	limit: number,
+	gender: Friends['gender'],
+	levelCounter: number,
+	friend: Friends,
+	done: ()=>boolean,
+	next: ()=>Constructor['friend']|null|Constructor['next'],
+	getGender: ()=> string
+}
+
+const sorted:Sorted = [];
 
 function sortUniqueNames(names:string[], prevNames:string[]):string[] {
 
-	const result = []	
+	const result:string[] = [];
+
 	names.forEach(name => {
 		if (prevNames.indexOf(name) == -1) {
-		  result.push(name);
+			result.push(name);
 		}
-	  });
+	});
 	
 	return Array.from(new Set(result));
 }
 
 function isBest(friend:Friends):boolean {
-	if (friend.hasOwnProperty('best')) {
+
+	if ('best' in friend) {
 
 		sorted[0] = sorted[0] ?  [...sorted[0], ...friend.friends] : [...friend.friends];
 		sorted[0] = Array.from(new Set(sorted[0].sort()));
 		return true;
 	}
+
 	return false;
 }
 
-function isCloseFriend(friend:Friends, level:number):boolean {
+function isCloseFriend(friend:Friends, level:Constructor['level']):boolean {
 	
 	if (sorted[level - 1].includes(friend.name)) {
 
@@ -45,12 +62,13 @@ function isCloseFriend(friend:Friends, level:number):boolean {
 
 		return true;
 	}
-		return false;
+	return false;
 }
 
-function sortAlthabeticaly(a, b):number {
-	const name = a.name.toLowerCase();
-	const nextName = b.name.toLowerCase();
+function sortAlthabeticaly(a:string, b:string):number {
+
+	const name:string = a.toLowerCase();
+	const nextName:string = b.toLowerCase();
 
 	if (name < nextName) {
 		return -1;
@@ -61,136 +79,108 @@ function sortAlthabeticaly(a, b):number {
 	return 0;
 }
 
-function sortFriends(friends:Friends[]):Friends[] {
+function isDone(friends:Friends[], level:Constructor['level'], counter:Constructor['counter'], limit:Constructor['limit']):boolean {
+	if (!sorted[level - 1] || level == limit || counter >= friends.length) {
 
-	const besties:Friends[] = friends.filter(friend => friend.hasOwnProperty('best'));
-	const others:Friends[] = friends.filter(friend => {
-		if (friend.hasOwnProperty('best')) {
-			return false
-		} else return true;
-		
-});
-	const sortedFriends:Friends[] = others.sort(sortAlthabeticaly);
+		return true;
+	} else if ( level + 1 == limit && isCloseFriend(friends[counter + 1], level) !== true) {
 
-	return [...besties, ...sortedFriends]
+		return true;
+
+	}
+
+	return false;
 }
 
-function findFriend(friends:Friends[], name:string) {
+function inviteBesties(this:Constructor, friends:Friends[], filter:Filter) {
 
-	const foundFriend = friends.filter(friend => {
-		return friend.name = name;
-	})
-	return foundFriend[0];
+	this.friend = friends[this.counter];
+	this.counter++;
+
+	return this.friend.gender === filter.gender ? this.friend : this.next();
 }
 
-function Iterator(friends:Friends[], filter:Filter):void {
+function inviteCloseFriends(this:Constructor, friends:Friends[]):Constructor['friend']{
+
+	const friendName:Friends['name'] = sorted[this.level - 1][this.levelCounter];
+	const friend:Constructor['friend'] = friends.find(friend => friend.name === friendName);
+
+	this.counter++;
+	this.levelCounter++;
+
+	return friend;
+}
+
+function changeLevel(this:Constructor):void {
+	this.levelCounter = 0;
+	this.level++;
+}
+
+function Iterator(this:Constructor,friends:Friends[], filter:Filter):void {
 
 	this.counter = 0;
 	this.level = 1;
-	this.value = '';
-	this.gender = '';
 	this.levelCounter = 0;
 	this.done = () => false;
-
 	this.next = () => {
 
 
-		if (this.counter < friends.length && isBest(friends[this.counter])) {
+		if (filter instanceof Filter == false) {
 
-			this.value = friends[this.counter];
-			this.gender = friends[this.counter].gender;
-			this.counter++;
+			throw new TypeError('filter is not instance of Filter');
 
-			if (this.gender === filter.gender) {
+		} else if (this.done() == true) {
 
-				return this.value;
-			}
+			return null;
+		} else if (isBest(friends[this.counter])) {
 
+			return inviteBesties.call(this, friends, filter) as Constructor['next'];
 
-			return this.next();
+		} else if (isCloseFriend(friends[this.counter], this.level)) {
 
-		} else if (this.counter < friends.length) {
+			const friend:Constructor['friend'] = inviteCloseFriends.call(this, friends, filter);
+			this.done = ():boolean => isDone(friends, this.level, this.counter, this.limit);
 
-			if (!sorted[this.level - 1]) {
-				return this.done();
-			} else if  (isCloseFriend(friends[this.counter], this.level) && this.level !== this.limit ){
-				
-				const friendName = sorted[this.level - 1][this.levelCounter];
-				const friend = friends.find(friend => friend.name === friendName);
-				this.value = friend;
-				this.gender = friend.gender
-				this.counter++;
-				this.levelCounter++;
+			return friend.gender === filter.gender ? friend : this.next();
 
-				if (this.gender === filter.gender) {
-
-					if ( this.level + 1 == this.limit && isCloseFriend(friends[this.counter + 1], this.level) !== true) {
-
-						this.done = () => true;
-						return this.value;
-					} else if (this.counter >= friends.length) {
-						this.done = () => true;
-						return this.value;
-					}
-					return this.value;
-				}
-
-
-				return this.next()
-			}
-
-			this.levelCounter = 0;
-			this.level++;
-
-			return this.next();
 		}
-		return null;
-	}	
+
+		changeLevel.call(this);
+
+		return this.next();
+	};
 }
+
 Object.setPrototypeOf(LimitedIterator.prototype, Iterator.prototype);
 Object.setPrototypeOf(LimitedIterator, Iterator);
 
-/**
- * Итератор по друзям с ограничением по кругу
- * @extends Iterator
- * @constructor
- * @param {Object[]} friends
- * @param {Filter} filter
- * @param {Number} maxLevel – максимальный круг друзей
- */
-function LimitedIterator(friends:Friends[], filter:Filter, maxLevel:number):void {
+function LimitedIterator(this:Constructor, friends:Friends[], filter:Filter, maxLevel:number):void {
 
 	this.limit = maxLevel;
 	Iterator.call(this, friends, filter);
 }
 
-/**
- * Фильтр друзей
- * @constructor
- */
-function Filter():void {
-	this.gender = '';
+function Filter(this:Constructor):void {
+	this.getGender = () => {
+		return this.gender;
+	};
 }
 
-Object.setPrototypeOf(Filter, Iterator);
-
-/**
- * Фильтр друзей
- * @extends Filter
- * @constructor
- */
-function MaleFilter():void {
+function MaleFilter(this:Constructor):void {
 	this.gender = 'male';
+	Filter.call(this);
 }
 
-/**
- * Фильтр друзей-девушек
- * @extends Filter
- * @constructor
- */
-function FemaleFilter():void {
+Object.setPrototypeOf(MaleFilter.prototype, Filter.prototype);
+
+function FemaleFilter(this:Constructor):void {
 	this.gender = 'female';
+	Filter.call(this);
 }
+
+Object.setPrototypeOf(FemaleFilter.prototype, Filter.prototype);
+
+
 
 exports.Iterator = Iterator;
 exports.LimitedIterator = LimitedIterator;

@@ -1,5 +1,5 @@
 'use strict';
-let sorted = [];
+const sorted = [];
 function sortUniqueNames(names, prevNames) {
     const result = [];
     names.forEach(name => {
@@ -10,7 +10,7 @@ function sortUniqueNames(names, prevNames) {
     return Array.from(new Set(result));
 }
 function isBest(friend) {
-    if (friend.hasOwnProperty('best')) {
+    if ('best' in friend) {
         sorted[0] = sorted[0] ? [...sorted[0], ...friend.friends] : [...friend.friends];
         sorted[0] = Array.from(new Set(sorted[0].sort()));
         return true;
@@ -26,8 +26,8 @@ function isCloseFriend(friend, level) {
     return false;
 }
 function sortAlthabeticaly(a, b) {
-    const name = a.name.toLowerCase();
-    const nextName = b.name.toLowerCase();
+    const name = a.toLowerCase();
+    const nextName = b.toLowerCase();
     if (name < nextName) {
         return -1;
     }
@@ -36,110 +36,76 @@ function sortAlthabeticaly(a, b) {
     }
     return 0;
 }
-function sortFriends(friends) {
-    const besties = friends.filter(friend => friend.hasOwnProperty('best'));
-    const others = friends.filter(friend => {
-        if (friend.hasOwnProperty('best')) {
-            return false;
-        }
-        else
-            return true;
-    });
-    const sortedFriends = others.sort(sortAlthabeticaly);
-    return [...besties, ...sortedFriends];
+function isDone(friends, level, counter, limit) {
+    if (!sorted[level - 1] || level == limit || counter >= friends.length) {
+        return true;
+    }
+    else if (level + 1 == limit && isCloseFriend(friends[counter + 1], level) !== true) {
+        return true;
+    }
+    return false;
 }
-function findFriend(friends, name) {
-    const foundFriend = friends.filter(friend => {
-        return friend.name = name;
-    });
-    return foundFriend[0];
+function inviteBesties(friends, filter) {
+    this.friend = friends[this.counter];
+    this.counter++;
+    return this.friend.gender === filter.gender ? this.friend : this.next();
+}
+function inviteCloseFriends(friends) {
+    const friendName = sorted[this.level - 1][this.levelCounter];
+    const friend = friends.find(friend => friend.name === friendName);
+    this.counter++;
+    this.levelCounter++;
+    return friend;
+}
+function changeLevel() {
+    this.levelCounter = 0;
+    this.level++;
 }
 function Iterator(friends, filter) {
     this.counter = 0;
     this.level = 1;
-    this.value = '';
-    this.gender = '';
     this.levelCounter = 0;
     this.done = () => false;
     this.next = () => {
-        if (this.counter < friends.length && isBest(friends[this.counter])) {
-            this.value = friends[this.counter];
-            this.gender = friends[this.counter].gender;
-            this.counter++;
-            if (this.gender === filter.gender) {
-                return this.value;
-            }
-            return this.next();
+        if (filter instanceof Filter == false) {
+            throw new TypeError('filter is not instance of Filter');
         }
-        else if (this.counter < friends.length) {
-            if (!sorted[this.level - 1]) {
-                return this.done();
-            }
-            else if (isCloseFriend(friends[this.counter], this.level) && this.level !== this.limit) {
-                const friendName = sorted[this.level - 1][this.levelCounter];
-                const friend = friends.find(friend => friend.name === friendName);
-                this.value = friend;
-                this.gender = friend.gender;
-                this.counter++;
-                this.levelCounter++;
-                if (this.gender === filter.gender) {
-                    if (this.level + 1 == this.limit && isCloseFriend(friends[this.counter + 1], this.level) !== true) {
-                        this.done = () => true;
-                        return this.value;
-                    }
-                    else if (this.counter >= friends.length) {
-                        this.done = () => true;
-                        return this.value;
-                    }
-                    return this.value;
-                }
-                return this.next();
-            }
-            this.levelCounter = 0;
-            this.level++;
-            return this.next();
+        else if (this.done() == true) {
+            return null;
         }
-        return null;
+        else if (isBest(friends[this.counter])) {
+            return inviteBesties.call(this, friends, filter);
+        }
+        else if (isCloseFriend(friends[this.counter], this.level)) {
+            const friend = inviteCloseFriends.call(this, friends, filter);
+            this.done = () => isDone(friends, this.level, this.counter, this.limit);
+            return friend.gender === filter.gender ? friend : this.next();
+        }
+        changeLevel.call(this);
+        return this.next();
     };
 }
 Object.setPrototypeOf(LimitedIterator.prototype, Iterator.prototype);
 Object.setPrototypeOf(LimitedIterator, Iterator);
-/**
- * Итератор по друзям с ограничением по кругу
- * @extends Iterator
- * @constructor
- * @param {Object[]} friends
- * @param {Filter} filter
- * @param {Number} maxLevel – максимальный круг друзей
- */
 function LimitedIterator(friends, filter, maxLevel) {
     this.limit = maxLevel;
     Iterator.call(this, friends, filter);
 }
-/**
- * Фильтр друзей
- * @constructor
- */
 function Filter() {
-    this.gender = '';
+    this.getGender = () => {
+        return this.gender;
+    };
 }
-Object.setPrototypeOf(Filter, Iterator);
-/**
- * Фильтр друзей
- * @extends Filter
- * @constructor
- */
 function MaleFilter() {
     this.gender = 'male';
+    Filter.call(this);
 }
-/**
- * Фильтр друзей-девушек
- * @extends Filter
- * @constructor
- */
+Object.setPrototypeOf(MaleFilter.prototype, Filter.prototype);
 function FemaleFilter() {
     this.gender = 'female';
+    Filter.call(this);
 }
+Object.setPrototypeOf(FemaleFilter.prototype, Filter.prototype);
 exports.Iterator = Iterator;
 exports.LimitedIterator = LimitedIterator;
 exports.Filter = Filter;

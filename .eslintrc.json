@@ -17,14 +17,13 @@
 	"plugins": [
 		"@typescript-eslint"
 	],
+	"ignorePatterns": ["index.js", "lib.js", "lib.spec.js"],
 	"rules": {
 		"indent": [
-			"error",
-			"tab"
+			"off"
 		],
 		"linebreak-style": [
-			"error",
-			"unix"
+			"off"
 		],
 		"quotes": [
 			"error",
@@ -33,6 +32,8 @@
 		"semi": [
 			"error",
 			"always"
-		]
+		],
+		"@typescript-eslint/no-unsafe-member-access": "off",
+		"@typescript-eslint/no-unsafe-argument": "off"
 	}
 }
