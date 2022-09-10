@@ -20,10 +20,12 @@
 	"ignorePatterns": ["index.js", "lib.js", "lib.spec.js"],
 	"rules": {
 		"indent": [
-			"off"
+			"error", 
+			"tab"
 		],
 		"linebreak-style": [
-			"off"
+			"error",
+			"unix"
 		],
 		"quotes": [
 			"error",
@@ -33,7 +35,6 @@
 			"error",
 			"always"
 		],
-		"@typescript-eslint/no-unsafe-member-access": "off",
 		"@typescript-eslint/no-unsafe-argument": "off"
 	}
 }

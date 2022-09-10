@@ -55,27 +55,11 @@ const femaleFilter = new lib.FemaleFilter();
 
 // Создаем итераторы
 const femaleIterator = new lib.Iterator(friends, femaleFilter);
-// console.log(femaleIterator.next());
-// console.log(femaleIterator.next());
-// console.log(femaleIterator.next());
-// console.log(femaleIterator.next());
-// console.log(femaleIterator.next());
-// console.log(femaleIterator.next());
-
 
 
 
 // Среди парней приглашаем только луших друзей и друзей лучших друзей
 const maleIterator = new lib.LimitedIterator(friends, maleFilter, 2);
-// console.log(maleIterator.next());
-// console.log(maleIterator.next());
-// console.log(maleIterator.done());
-// console.log(maleIterator.next());
-// console.log(maleIterator.done());
-// console.log(maleIterator.next());
-// console.log(maleIterator.done());
-// console.log(maleIterator.next());
-
 
 
 
@@ -98,6 +82,6 @@ console.info(invitedFriends);
 
 // Sam, Sally 
 // Brad, Emily
-// Mat, Sharon
+// Mat, Sharon;
 // Julia
  

@@ -6,6 +6,7 @@ type Friends = {
 	gender: 'male'|'female',
 	best?: true
 }
+
 type Filter = {
 	gender: 'male'|'female'
 }
@@ -21,8 +22,8 @@ type Constructor = {
 	gender: Friends['gender'],
 	levelCounter: number,
 	friend: Friends,
-	done: ()=>boolean,
-	next: ()=>Constructor['friend']|null|Constructor['next'],
+	done: () => boolean,
+	next: () => Constructor['friend']|null|Constructor['next'],
 	getGender: ()=> string
 }
 
@@ -30,11 +31,11 @@ const sorted:Sorted = [];
 
 function sortUniqueNames(names:string[], prevNames:string[]):string[] {
 
-	const result:string[] = [];
+	let result:string[] = [];
 
 	names.forEach(name => {
 		if (prevNames.indexOf(name) == -1) {
-			result.push(name);
+			result = result.length === 0 ? [name] : [...result, name];
 		}
 	});
 	
@@ -58,7 +59,7 @@ function isCloseFriend(friend:Friends, level:Constructor['level']):boolean {
 	if (sorted[level - 1].includes(friend.name)) {
 
 		sorted[level] = sorted[level] ? [...sorted[level], ...friend.friends] : [...friend.friends];
-		sorted[level] = sortUniqueNames(sorted[level].sort(), sorted[level -1].sort());
+		sorted[level] = sortUniqueNames(sorted[level].sort(sortAlthabeticaly), sorted[level -1].sort(sortAlthabeticaly));
 
 		return true;
 	}
@@ -92,25 +93,6 @@ function isDone(friends:Friends[], level:Constructor['level'], counter:Construct
 	return false;
 }
 
-function inviteBesties(this:Constructor, friends:Friends[], filter:Filter) {
-
-	this.friend = friends[this.counter];
-	this.counter++;
-
-	return this.friend.gender === filter.gender ? this.friend : this.next();
-}
-
-function inviteCloseFriends(this:Constructor, friends:Friends[]):Constructor['friend']{
-
-	const friendName:Friends['name'] = sorted[this.level - 1][this.levelCounter];
-	const friend:Constructor['friend'] = friends.find(friend => friend.name === friendName);
-
-	this.counter++;
-	this.levelCounter++;
-
-	return friend;
-}
-
 function changeLevel(this:Constructor):void {
 	this.levelCounter = 0;
 	this.level++;
@@ -134,11 +116,18 @@ function Iterator(this:Constructor,friends:Friends[], filter:Filter):void {
 			return null;
 		} else if (isBest(friends[this.counter])) {
 
-			return inviteBesties.call(this, friends, filter) as Constructor['next'];
+			this.friend = friends[this.counter];
+			this.counter++;
+
+			return this.friend.gender === filter.gender ? this.friend : this.next();
 
 		} else if (isCloseFriend(friends[this.counter], this.level)) {
 
-			const friend:Constructor['friend'] = inviteCloseFriends.call(this, friends, filter);
+			const friendName:Friends['name'] = sorted[this.level - 1][this.levelCounter];
+			const friend:Constructor['friend'] = friends.find(friend => friend.name === friendName);
+
+			this.counter++;
+			this.levelCounter++;
 			this.done = ():boolean => isDone(friends, this.level, this.counter, this.limit);
 
 			return friend.gender === filter.gender ? friend : this.next();
@@ -181,10 +170,10 @@ function FemaleFilter(this:Constructor):void {
 Object.setPrototypeOf(FemaleFilter.prototype, Filter.prototype);
 
 
-
-exports.Iterator = Iterator;
-exports.LimitedIterator = LimitedIterator;
-
-exports.Filter = Filter;
-exports.MaleFilter = MaleFilter;
-exports.FemaleFilter = FemaleFilter;
+module.exports = {
+	Iterator,
+	LimitedIterator,
+	Filter,
+	MaleFilter, 
+	FemaleFilter
+};

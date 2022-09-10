@@ -1,10 +1,10 @@
 'use strict';
 const sorted = [];
 function sortUniqueNames(names, prevNames) {
-    const result = [];
+    let result = [];
     names.forEach(name => {
         if (prevNames.indexOf(name) == -1) {
-            result.push(name);
+            result = result.length === 0 ? [name] : [...result, name];
         }
     });
     return Array.from(new Set(result));
@@ -20,7 +20,7 @@ function isBest(friend) {
 function isCloseFriend(friend, level) {
     if (sorted[level - 1].includes(friend.name)) {
         sorted[level] = sorted[level] ? [...sorted[level], ...friend.friends] : [...friend.friends];
-        sorted[level] = sortUniqueNames(sorted[level].sort(), sorted[level - 1].sort());
+        sorted[level] = sortUniqueNames(sorted[level].sort(sortAlthabeticaly), sorted[level - 1].sort(sortAlthabeticaly));
         return true;
     }
     return false;
@@ -45,18 +45,6 @@ function isDone(friends, level, counter, limit) {
     }
     return false;
 }
-function inviteBesties(friends, filter) {
-    this.friend = friends[this.counter];
-    this.counter++;
-    return this.friend.gender === filter.gender ? this.friend : this.next();
-}
-function inviteCloseFriends(friends) {
-    const friendName = sorted[this.level - 1][this.levelCounter];
-    const friend = friends.find(friend => friend.name === friendName);
-    this.counter++;
-    this.levelCounter++;
-    return friend;
-}
 function changeLevel() {
     this.levelCounter = 0;
     this.level++;
@@ -74,10 +62,15 @@ function Iterator(friends, filter) {
             return null;
         }
         else if (isBest(friends[this.counter])) {
-            return inviteBesties.call(this, friends, filter);
+            this.friend = friends[this.counter];
+            this.counter++;
+            return this.friend.gender === filter.gender ? this.friend : this.next();
         }
         else if (isCloseFriend(friends[this.counter], this.level)) {
-            const friend = inviteCloseFriends.call(this, friends, filter);
+            const friendName = sorted[this.level - 1][this.levelCounter];
+            const friend = friends.find(friend => friend.name === friendName);
+            this.counter++;
+            this.levelCounter++;
             this.done = () => isDone(friends, this.level, this.counter, this.limit);
             return friend.gender === filter.gender ? friend : this.next();
         }
@@ -106,8 +99,10 @@ function FemaleFilter() {
     Filter.call(this);
 }
 Object.setPrototypeOf(FemaleFilter.prototype, Filter.prototype);
-exports.Iterator = Iterator;
-exports.LimitedIterator = LimitedIterator;
-exports.Filter = Filter;
-exports.MaleFilter = MaleFilter;
-exports.FemaleFilter = FemaleFilter;
+module.exports = {
+    Iterator,
+    LimitedIterator,
+    Filter,
+    MaleFilter,
+    FemaleFilter
+};
