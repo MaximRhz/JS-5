@@ -49,13 +49,19 @@ const friends = [
 
 // Создаем фильтры парней и девушек
 const maleFilter = new lib.MaleFilter();
+
 const femaleFilter = new lib.FemaleFilter();
+
 
 // Создаем итераторы
 const femaleIterator = new lib.Iterator(friends, femaleFilter);
 
+
+
 // Среди парней приглашаем только луших друзей и друзей лучших друзей
 const maleIterator = new lib.LimitedIterator(friends, maleFilter, 2);
+
+
 
 const invitedFriends = [];
 
@@ -73,7 +79,9 @@ while (!femaleIterator.done()) {
 }
 
 console.info(invitedFriends);
-// Sam, Sally
+
+// Sam, Sally 
 // Brad, Emily
-// Mat, Sharon
+// Mat, Sharon;
 // Julia
+ 
